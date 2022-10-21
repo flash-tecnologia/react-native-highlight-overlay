@@ -3,8 +3,6 @@ import React from "react";
 import type { HighlightOverlayProps, OverlayStyle } from "../HighlightOverlay";
 
 export type OverlayData = {
-	entering: HighlightOverlayProps["entering"];
-	exiting: HighlightOverlayProps["exiting"];
 	onDismiss: HighlightOverlayProps["onDismiss"];
 } & Required<OverlayStyle>;
 

@@ -1,14 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import type { RectProps } from "react-native-svg";
 import Svg, { ClipPath, Defs, Path, Rect } from "react-native-svg";
 
 import constructClipPath from "./constructClipPath";
 import { useHighlightableElements } from "./context";
 import type { Bounds } from "./context/context";
-
-const AnimatedSvg = Animated.createAnimatedComponent(Svg);
 
 const DEFAULT_OVERLAY_STYLE: Required<OverlayStyle> = {
 	color: "black",
@@ -32,8 +28,6 @@ export type OverlayStyle = {
 	 */
 	opacity?: number;
 };
-
-export type EnteringAnimation = Animated.AnimateProps<RectProps>["entering"];
 
 export type HighlightOverlayProps = {
 	/**
@@ -60,30 +54,6 @@ export type HighlightOverlayProps = {
 	 * @since 1.3
 	 */
 	overlayStyle?: OverlayStyle;
-
-	/**
-	 * The animation when the overlay is entering the screen. Defaults to `FadeIn`.
-	 * Set to `null` (not `undefined`!) to disable animation.
-	 *
-	 * @default FadeIn
-	 * @example
-	 * import { FadeIn } from "react-native-reanimated";
-	 * <HighlightOverlay entering={FadeIn} />
-	 * @since 1.3
-	 */
-	entering?: EnteringAnimation | null;
-
-	/**
-	 * The animation when the overlay is exiting the screen. Defaults to `FadeOut`.
-	 * Set to `null` (not `undefined`!) to disable animation.
-	 *
-	 * @default undefined
-	 * @example
-	 * import { FadeOut } from "react-native-reanimated";
-	 * <HighlightOverlay exiting={FadeOut} />
-	 * @since 1.3
-	 */
-	exiting?: EnteringAnimation | null;
 };
 
 /**
@@ -100,8 +70,6 @@ function HighlightOverlay({
 	highlightedElementId,
 	onDismiss,
 	overlayStyle = DEFAULT_OVERLAY_STYLE,
-	entering = FadeIn,
-	exiting = FadeOut,
 }: HighlightOverlayProps) {
 	const [elements, { setCurrentActiveOverlay }] = useHighlightableElements();
 	const [parentSize, setParentSize] = useState<Bounds | null>();
@@ -118,11 +86,11 @@ function HighlightOverlay({
 
 	useEffect(() => {
 		setCurrentActiveOverlay(
-			highlightedElementId == null ? null : { color, opacity, entering, exiting, onDismiss }
+			highlightedElementId == null ? null : { color, opacity, onDismiss }
 		);
 		// Dependency array should NOT include `onDismiss` prop
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [color, entering, exiting, highlightedElementId, opacity, setCurrentActiveOverlay]);
+	}, [color, highlightedElementId, opacity, setCurrentActiveOverlay]);
 
 	return (
 		<View
@@ -131,12 +99,10 @@ function HighlightOverlay({
 			pointerEvents="box-none"
 		>
 			{hasContent && (
-				<AnimatedSvg
+				<Svg
 					key={highlightedElementId}
 					pointerEvents={clickThrough ? "none" : "auto"}
 					onPress={!clickThrough ? onDismiss : undefined}
-					entering={entering ?? undefined}
-					exiting={exiting ?? FadeOut}
 					style={StyleSheet.absoluteFill}
 				>
 					<Defs>
@@ -158,7 +124,7 @@ function HighlightOverlay({
 						fill={color}
 						fillOpacity={opacity}
 					/>
-				</AnimatedSvg>
+				</Svg>
 			)}
 		</View>
 	);
@@ -170,6 +136,5 @@ export default React.memo(
 		// We need this here so we don't check the `onDismiss` prop.
 		prevProps.highlightedElementId === nextProps.highlightedElementId &&
 		prevProps.overlayStyle?.color === nextProps.overlayStyle?.color &&
-		prevProps.overlayStyle?.opacity === nextProps.overlayStyle?.opacity &&
-		prevProps.entering === nextProps.entering
+		prevProps.overlayStyle?.opacity === nextProps.overlayStyle?.opacity
 );
