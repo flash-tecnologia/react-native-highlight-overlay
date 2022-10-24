@@ -86,12 +86,12 @@ export type SetCurrentActiveOverlay = (data: OverlayData | null) => void;
 
 export type GetCurrentActiveOverlay = () => OverlayData | null;
 
-type IHighlightableElementContext = [
+type IHighlightableElementContext = readonly [
 	/**
 	 * @since 1.0
 	 */
-	elements: Readonly<ElementsRecord>,
-	actions: {
+	Readonly<ElementsRecord>,
+	{
 		/**
 		 * @since 1.0
 		 */
