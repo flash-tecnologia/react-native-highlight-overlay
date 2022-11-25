@@ -107,6 +107,7 @@ function HighlightOverlay({
 				>
 					<Defs>
 						{Object.entries(elements).map(([id, element]) => (
+							//@ts-ignore
 							<ClipPath key={id} id={id}>
 								<Path
 									d={constructClipPath(element, parentSize)}
