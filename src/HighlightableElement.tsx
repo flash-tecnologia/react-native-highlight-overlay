@@ -40,6 +40,7 @@ function HighlightableElement({ id, options, children, style }: HighlightableEle
 		const timeoutId = setTimeout(() => {
 			ref.current?.measureLayout(
 				// This is a typing error on ReactNative's part. 'rootRef' is a valid reference.
+				// @ts-ignore
 				rootRef as unknown as HostComponent<unknown>,
 				(x, y, width, height) => {
 					addElement(id, children, { x, y, width, height }, options);
