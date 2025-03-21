@@ -48,7 +48,7 @@ jobs:
           name: Typecheck files
           command: yarn typescript
 
-  build-package:
+  build-and-publish:
     executor: default
     steps:
       - checkout
@@ -56,8 +56,8 @@ jobs:
           keys:
             - *cache-key
       - run:
-          name: Build package
-          command: yarn npm publish
+          name: Build and publish
+          command: yarn prepare && yarn npm publish
 
 workflows:
   build-and-test:
@@ -75,7 +75,7 @@ workflows:
             - install-dependencies
           context:
             - STAGING
-      - build-package:
+      - build-and-publish:
           requires:
             - lint
             - typescript
@@ -85,4 +85,4 @@ workflows:
           filters:
             branches:
               only:
-                - main
+                - master
