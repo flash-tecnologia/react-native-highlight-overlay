@@ -1,98 +1,88 @@
 version: 2.1
 
+aliases:
+  - &cache-key cache-{{ checksum "yarn.lock" }}
+
 executors:
   default:
     docker:
-      - image: circleci/node:10
+      - image: cimg/node:18.18.0
     working_directory: ~/project
-
-commands:
-  attach_project:
-    steps:
-      - attach_workspace:
-          at: ~/project
 
 jobs:
   install-dependencies:
     executor: default
     steps:
       - checkout
-      - attach_project
       - restore_cache:
           keys:
-            - dependencies-{{ checksum "package.json" }}
-            - dependencies-
-      - restore_cache:
-          keys:
-            - dependencies-example-{{ checksum "example/package.json" }}
-            - dependencies-example-
+            - *cache-key
       - run:
           name: Install dependencies
-          command: |
-            yarn install --cwd example --frozen-lockfile
-            yarn install --frozen-lockfile
+          command: yarn install --immutable
       - save_cache:
-          key: dependencies-{{ checksum "package.json" }}
-          paths: node_modules
-      - save_cache:
-          key: dependencies-example-{{ checksum "example/package.json" }}
-          paths: example/node_modules
-      - persist_to_workspace:
-          root: .
-          paths: .
+          key: *cache-key
+          paths: 
+            - node_modules
+            - .yarn/install-state.gz
 
   lint:
     executor: default
     steps:
-      - attach_project
+      - checkout
+      - restore_cache:
+          keys:
+            - *cache-key
       - run:
           name: Lint files
-          command: |
-            yarn lint
+          command: yarn lint
 
   typescript:
     executor: default
     steps:
-      - attach_project
+      - checkout
+      - restore_cache:
+          keys:
+            - *cache-key
       - run:
           name: Typecheck files
-          command: |
-            yarn typescript
-
-  unit-tests:
-    executor: default
-    steps:
-      - attach_project
-      - run:
-          name: Run unit tests
-          command: |
-            yarn test --coverage
-      - store_artifacts:
-          path: coverage
-          destination: coverage
+          command: yarn typescript
 
   build-package:
     executor: default
     steps:
-      - attach_project
+      - checkout
+      - restore_cache:
+          keys:
+            - *cache-key
       - run:
           name: Build package
-          command: |
-            yarn prepare
+          command: yarn npm publish
 
 workflows:
   build-and-test:
     jobs:
-      - install-dependencies
+      - install-dependencies:
+          context:
+            - STAGING
       - lint:
           requires:
             - install-dependencies
+          context:
+            - STAGING
       - typescript:
           requires:
             - install-dependencies
-      - unit-tests:
-          requires:
-            - install-dependencies
+          context:
+            - STAGING
       - build-package:
           requires:
-            - install-dependencies
+            - lint
+            - typescript
+          context:
+            - github-publish-context
+            - STAGING
+          filters:
+            branches:
+              only:
+                - main
